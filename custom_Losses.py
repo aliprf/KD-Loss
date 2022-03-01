@@ -19,6 +19,11 @@ print(tf.__version__)
 
 
 class Custom_losses:
+
+    def MSE(self, x_pr, x_gt):
+        return tf.losses.mean_squared_error(x_pr, x_gt)
+
+
     def kd_loss(self, x_pr, x_gt, x_tough, x_tol, alpha_tough, alpha_mi_tough, alpha_tol, alpha_mi_tol,
                 main_loss_weight, tough_loss_weight, tol_loss_weight):
         """km"""

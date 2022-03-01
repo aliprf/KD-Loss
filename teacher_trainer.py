@@ -25,7 +25,7 @@ import pickle
 # tf.compat.v1.enable_eager_execution()
 
 
-class StudentTrainer:
+class TeacherTrainer:
 
     def __init__(self, dataset_name, use_augmneted):
         self.dataset_name = dataset_name
@@ -53,9 +53,7 @@ class StudentTrainer:
                 self.img_path = WflwConf.no_aug_train_image
                 self.annotation_path = WflwConf.no_aug_train_annotation
 
-    def train(self, arch_student, weight_path_student, loss_weight_student,
-              arch_tough_teacher, weight_path_tough_teacher, loss_weight_tough_teacher,
-              arch_tol_teacher, weight_path_tol_teacher, loss_weight_tol_teacher):
+    def train(self, arch, weight_path):
         """"""
         '''create loss'''
         c_loss = Custom_losses()
@@ -65,9 +63,7 @@ class StudentTrainer:
             "./train_logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S"))
 
         '''making models'''
-        model_student = self.make_model(arch=arch_student, w_path=weight_path_student, is_old=False)
-        model_tough_teacher = self.make_model(arch=arch_tough_teacher, w_path=weight_path_tough_teacher)
-        model_tol_teacher = self.make_model(arch=arch_tol_teacher, w_path=weight_path_tol_teacher)
+        model = self.make_model(arch=arch, w_path=weight_path, is_old=False)
 
         '''create optimizer'''
         _lr = 1e-3
@@ -75,7 +71,6 @@ class StudentTrainer:
 
         '''create sample generator'''
         x_train_filenames, x_val_filenames, y_train_filenames, y_val_filenames = self._create_generators()
-        # x_train_filenames, y_train_filenames = self._create_generators()
 
         '''create train configuration'''
         step_per_epoch = len(x_train_filenames) // LearningConfig.batch_size
@@ -85,86 +80,46 @@ class StudentTrainer:
             x_train_filenames, y_train_filenames = self._shuffle_data(x_train_filenames, y_train_filenames)
             for batch_index in range(step_per_epoch):
                 '''load annotation and images'''
-                images, annotation_gr, annotation_tough_teacher, annotation_tol_teacher, annotation_student = self._get_batch_sample(
+                images, annotation_gr = self._get_batch_sample(
                     batch_index=batch_index, x_train_filenames=x_train_filenames,
-                    y_train_filenames=y_train_filenames, model_tough_t=model_tough_teacher,
-                    model_tol_t=model_tol_teacher, model_student=model_student)
+                    y_train_filenames=y_train_filenames, model=model)
                 '''convert to tensor'''
                 images = tf.cast(images, tf.float32)
                 annotation_gr = tf.cast(annotation_gr, tf.float32)
-                annotation_tough_teacher = tf.cast(annotation_tough_teacher, tf.float32)
-                annotation_tol_teacher = tf.cast(annotation_tol_teacher, tf.float32)
 
                 '''train step'''
                 self.train_step(epoch=epoch, step=batch_index, total_steps=step_per_epoch, images=images,
-                                model_student=model_student,
-                                annotation_gr=annotation_gr, annotation_tough_teacher=annotation_tough_teacher,
-                                annotation_tol_teacher=annotation_tol_teacher,
-                                l_w_stu=loss_weight_student, l_w_togh_t=loss_weight_tough_teacher,
-                                loss_w_tol_t=loss_weight_tol_teacher,
-                                optimizer=optimizer_student, summary_writer=summary_writer, c_loss=c_loss)
+                                model=model,
+                                annotation_gr=annotation_gr,
+                                optimizer=optimizer_student,
+                                summary_writer=summary_writer, c_loss=c_loss)
             '''evaluating part'''
             img_batch_eval, pn_batch_eval = self._create_evaluation_batch(x_val_filenames, y_val_filenames)
             # loss_eval, loss_eval_tol_dif_stu, loss_eval_tol_dif_gt, loss_eval_tou_dif_stu, loss_eval_tou_dif_gt = \
-            loss_eval = self._eval_model(img_batch_eval, pn_batch_eval, model_student)
+            loss_eval = self._eval_model(img_batch_eval, pn_batch_eval, model)
             with summary_writer.as_default():
                 tf.summary.scalar('Eval-LOSS', loss_eval, step=epoch)
-                # tf.summary.scalar('Eval-loss_eval_tol_dif_stu', loss_eval_tol_dif_stu, step=epoch)
-                # tf.summary.scalar('Eval-loss_eval_tol_dif_gt', loss_eval_tol_dif_gt, step=epoch)
-                # tf.summary.scalar('Eval-loss_eval_tou_dif_stu', loss_eval_tou_dif_stu, step=epoch)
-                # tf.summary.scalar('Eval-loss_eval_tou_dif_gt', loss_eval_tou_dif_gt, step=epoch)
-            # model_student.save_weights('./models/stu_weight_' + '_' + str(epoch) + self.dataset_name + '_' + str(loss_eval) + '.h5')
             '''save weights'''
-            model_student.save(
-                './models/stu_model_' + str(epoch) + '_' + self.dataset_name + '_' + str(loss_eval) + '.h5')
-            '''calculate Learning rate'''
-            # _lr = self._calc_learning_rate(iterations=epoch, step_size=20, base_lr=1e-5, max_lr=1e-1)
-            # optimizer_student = self._get_optimizer(lr=_lr)
-
-    def _calc_learning_rate(self, iterations, step_size, base_lr, max_lr):
-        cycle = np.floor(1 + iterations / (2 * step_size))
-        x = np.abs(iterations / step_size - 2 * cycle + 1)
-        lr = base_lr + (max_lr - base_lr) * np.maximum(0, (1 - x)) / float(2 ** (cycle - 1))
-        print('LR is: ' + str(lr))
-        return lr
+            model.save(
+                './models/teacher_model_' + str(epoch) + '_' + self.dataset_name + '_' + str(loss_eval) + '.h5')
 
     # @tf.function
-    def train_step(self, epoch, step, total_steps, images, model_student, annotation_gr,
-                   annotation_tough_teacher, annotation_tol_teacher, annotation_student,
-                   l_w_stu, l_w_togh_t, loss_w_tol_t,
-                   optimizer, summary_writer, c_loss, train_dif):
-        with tf.GradientTape() as tape_student:
+    def train_step(self, epoch, step, total_steps, images,
+                   model, annotation_gr,
+                   optimizer, summary_writer, c_loss):
+        with tf.GradientTape() as tape:
             '''create annotation_predicted'''
-            # annotation_predicted, pr_tol, pr_tol_dif_gt, pr_tou, pr_tou_dif_gt = model_student(
-            annotation_predicted = model_student(
-                images, training=True)
+            annotation_predicted = model(images, training=True)
             '''calculate loss'''
-            loss_total, loss_main, loss_tough_assist, loss_tol_assist = c_loss.kd_loss(x_pr=annotation_predicted,
-                                                                                       x_gt=annotation_gr,
-                                                                                       x_tough=annotation_tough_teacher,
-                                                                                       x_tol=annotation_tol_teacher,
-                                                                                       alpha_tough=1.9,
-                                                                                       alpha_mi_tough=-0.45,
-                                                                                       alpha_tol=1.8,
-                                                                                       alpha_mi_tol=-0.4,
-                                                                                       main_loss_weight=l_w_stu,
-                                                                                       tough_loss_weight=l_w_togh_t,
-                                                                                       tol_loss_weight=loss_w_tol_t)
+            loss = c_loss.MSE(x_pr=annotation_predicted, x_gt=annotation_gr)
             '''calculate gradient'''
-            gradients_of_student = tape_student.gradient(loss_total, model_student.trainable_variables)
+            gradients = tape.gradient(loss, model.trainable_variables)
             '''apply Gradients:'''
-            optimizer.apply_gradients(zip(gradients_of_student, model_student.trainable_variables))
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
             '''printing loss Values: '''
-            tf.print("->EPOCH: ", str(epoch), "->STEP: ", str(step) + '/' + str(total_steps),
-                     ' -> : LOSS: ', loss_total,
-                     ' -> : loss_main: ', loss_main,
-                     ' -> : loss_tough_assist: ', loss_tough_assist,
-                     ' -> : loss_tol_assist: ', loss_tol_assist)
+            tf.print("->EPOCH: ", str(epoch), "->STEP: ", str(step) + '/' + str(total_steps), ' -> : LOSS: ', loss)
             with summary_writer.as_default():
-                tf.summary.scalar('LOSS', loss_total, step=epoch)
-                tf.summary.scalar('loss_main', loss_main, step=epoch)
-                tf.summary.scalar('loss_tough_assist', loss_tough_assist, step=epoch)
-                tf.summary.scalar('loss_tol_assist', loss_tol_assist, step=epoch)
+                tf.summary.scalar('LOSS', loss, step=epoch)
 
     def make_model(self, arch, w_path, is_old=False):
         cnn = CNNModel()
@@ -172,7 +127,6 @@ class StudentTrainer:
                               is_old=is_old)
         if w_path is not None and arch != 'mobileNetV2_d' and not is_old:
             model.load_weights(w_path)
-        # model.save('test_model'+arch+'.h5')
         return model
 
     def _eval_model(self, img_batch_eval, pn_batch_eval, model):
@@ -231,8 +185,7 @@ class StudentTrainer:
             pn_batch = np.array([self._load_and_normalize(pn_tr_path + file_name) for file_name in batch_y])
         return img_batch, pn_batch
 
-    def _get_batch_sample(self, batch_index, x_train_filenames, y_train_filenames, model_tough_t, model_tol_t, model_student,
-                          train_dif):
+    def _get_batch_sample(self, batch_index, x_train_filenames, y_train_filenames):
         img_path = self.img_path
         pn_tr_path = self.annotation_path
         '''create batch data and normalize images'''
@@ -241,39 +194,9 @@ class StudentTrainer:
         batch_y = y_train_filenames[
                   batch_index * LearningConfig.batch_size:(batch_index + 1) * LearningConfig.batch_size]
         img_batch = np.array([imread(img_path + file_name) for file_name in batch_x]) / 255.0
-        if self.dataset_name == DatasetName.cofw:  # this ds is not normalized
-            pn_batch = np.array([load(pn_tr_path + file_name) for file_name in batch_y])
-        else:
-            pn_batch = np.array([self._load_and_normalize(pn_tr_path + file_name) for file_name in batch_y])
-        '''prediction to create tough and tolerant batches'''
-        pn_batch_tough = model_tough_t.predict_on_batch(img_batch)
-        if not train_dif:
-            pn_batch_tol = model_tol_t.predict_on_batch(img_batch)
-            pn_batch_stu = None
-        else:
-            pn_batch_tol = None
-            pn_batch_stu = model_tol_t.predict_on_batch(img_batch)
+        pn_batch = np.array([self._load_and_normalize(pn_tr_path + file_name) for file_name in batch_y])
 
-
-        # pn_batch_tough = 0
-        # pn_batch_tol = 0
-
-        '''test: print'''
-        # image_utility = ImageUtility()
-        # if self.dataset_name == DatasetName.cofw:  # this ds is not normalized
-        #     gr_s, gr_px_1, gr_Py_1 = image_utility.create_landmarks(pn_batch[0])
-        #     tou_s, tou_px_1, tou_Py_1 = image_utility.create_landmarks(pn_batch_tough[0])
-        #     tol_s, tol_px_1, tol_Py_1 = image_utility.create_landmarks(pn_batch_tol[0])
-        # else:
-        #     gr_s, gr_px_1, gr_Py_1 = image_utility.create_landmarks_from_normalized(pn_batch[0], 224, 224, 112, 112)
-        #     tou_s, tou_px_1, tou_Py_1 = image_utility.create_landmarks_from_normalized(pn_batch_tough[0], 224, 224, 112, 112)
-        #     tol_s, tol_px_1, tol_Py_1 = image_utility.create_landmarks_from_normalized(pn_batch_tol[0], 224, 224, 112, 112)
-        #
-        # imgpr.print_image_arr(str(batch_index)+'pts_gt', img_batch[0], gr_px_1, gr_Py_1)
-        # imgpr.print_image_arr(str(batch_index)+'pts_t100', img_batch[0], tou_px_1, tou_Py_1)
-        # imgpr.print_image_arr(str(batch_index)+'pts_t90', img_batch[0], tol_px_1, tol_Py_1)
-
-        return img_batch, pn_batch, pn_batch_tough, pn_batch_tol, pn_batch_stu
+        return img_batch, pn_batch
 
     def _load_and_normalize(self, point_path):
         annotation = load(point_path)

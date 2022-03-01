@@ -5,17 +5,16 @@ from pca_utility import PCAUtility
 from image_utility import ImageUtility
 from student_train import StudentTrainer
 from test import Test
-from train import Train
+from teacher_trainer import TeacherTrainer
 
 if __name__ == '__main__':
 
     '''test models'''
 
     '''train Teacher Networks'''
-    trainer = Train(dataset_name=DatasetName.w300,
-                    arch='efficientNet',
-                    weight=None,
-                    accuracy=100)
+    trainer = TeacherTrainer(dataset_name=DatasetName.w300)
+    trainer.train(arch='efficientNet',weight_path=None)
+
 
     '''Training Student Network'''
     '''300W'''
