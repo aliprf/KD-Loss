@@ -7,20 +7,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facial Landmark Points Detection</title>
     <style>
-        body {
+         body {
             font-family: 'Arial', sans-serif;
-            line-height: 1.6;
+            background-color: #FEFCF3;
+            color: #0D9276;
             margin: 20px;
-            padding: 20px;
-            background-color: #F7F7F7; /* Light Grayish Background */
-            color: #555555; /* Dark Gray Text Color */
         }
 
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #6D2932;
+        }
+
+
+        #main-content {
+             max-width: 1200px;
+            margin: auto;
+            margin-top:20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+        }
         code {
-            background-color: #EAEAEA; /* Light Grayish Code Background */
-            border: 1px solid #CCCCCC; /* Light Gray Border Color */
-            border-left: 3px solid #4CAF50; /* Green Accent Color */
-            color: #333333; /* Dark Gray Code Text Color */
+            background-color: #BAD1C2; /* Dark Gray Code Background */
+            border: 1px solid #F0F0F0; /* Border Color */
+            border-left: 3px solid #860A35; /* Accent Color */
+            color: #0C2D57; /* Light Code Text Color */
             display: block;
             margin: 10px 0;
             padding: 10px;
@@ -32,15 +46,15 @@
         }
 
         img {
-            max-width: 70%;
-            height: auto;
             display: block;
             margin: 0 auto;
+            max-width: 50%;
+            height: auto;
         }
 
         blockquote {
-            background: #EAEAEA; /* Light Grayish Blockquote Background */
-            border-left: 10px solid #4CAF50; /* Green Accent Color */
+            background: #2d2d2d; /* Darker Gray for Blockquote */
+            border-left: 10px solid #FC6736;
             margin: 1.5em 10px;
             padding: 0.5em 10px;
         }
@@ -51,117 +65,74 @@
         h4,
         h5,
         h6 {
-            color: #4CAF50; /* Green Accent Color */
+            color: #860A35;
             text-align: center;
         }
 
         h1 {
             font-size: 3em;
+            color: #224B0C; /* Light Text Color for Heading */
         }
 
         h2 {
             font-size: 2.5em;
+            color: #42855B; /* Light Text Color for Heading */
         }
 
         h3 {
             font-size: 2em;
+            color: #90B77D; /* Light Text Color for Heading */
         }
 
         h4 {
             font-size: 1.8em;
+            color: #436850; /* Light Text Color for Heading */
         }
 
         h5 {
             font-size: 1.5em;
+            color: #436850; /* Light Text Color for Heading */
         }
 
         h6 {
             font-size: 1.2em;
+            color: #436850; /* Light Text Color for Heading */
         }
 
         strong {
-            color: #4CAF50; /* Green Accent Color */
+            color: #436850;
         }
 
         a {
-            color: #4CAF50; /* Green Accent Color */
-            text-decoration: none;
+            color: #40A2E3;
             transition: color 0.5s;
         }
 
         a:hover {
-            color: #64DD17; /* Light Green Hover Color */
+            color: #f45026;
         }
 
-        #dark-mode-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            font-size: 20px;
-            cursor: pointer;
-            color: #4CAF50; /* Green Accent Color */
-        }
-
-        .content {
-            text-align: left;
+  p {
+            color: #555;
         }
     </style>
 </head>
 
-<body class="dark-mode">
+<body>
 
-    <div id="dark-mode-toggle" onclick="toggleDarkMode()">🌙</div>
+    <h1>Facial Landmark Points Detection Using Knowledge Distillation-Based Neural Networks</h1>
 
-    <script>
-        function toggleDarkMode() {
-            const body = document.body;
-            body.classList.toggle("dark-mode");
-        }
-    </script>
 
-    <h1>Facial Landmark Points Detection</h1>
+<div id="main-content">
 
-    <p><a href="https://github.com/aliprf/KD-Loss"><img src="https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/facial-landmark-points-detection-using/face-alignment-on-cofw" alt="GitHub"></a></p>
-
-    <h2>Facial Landmark Points Detection Using Knowledge Distillation-Based Neural Networks</h2>
-
-    <ul>
-        <li><strong>Link to the paper:</strong></li>
-        <ul>
-            <li><a href="https://scholar.google.com/citations?view_op=view_citation&hl=en&user=96lS6HIAAAAJ&citation_for_view=96lS6HIAAAAJ:zYLM7Y9cAGgC">Google Scholar</a></li>
-            <li><a href="https://www.sciencedirect.com/science/article/pii/S1077314221001582">Elsevier</a></li>
-            <li><a href="https://arxiv.org/abs/2111.07047">Arxiv</a></li>
-        </ul>
-        <li><strong>Link to the paperswithcode.com:</strong> <a href="https://paperswithcode.com/paper/facial-landmark-points-detection-using">https://paperswithcode.com/paper/facial-landmark-points-detection-using</a></li>
-    </ul>
-
-    <pre>
-        <code>
-@@plaese STAR the repo if you like it.@@
-        </code>
-    </pre>
-
-    <pre>
-        <code>
-Please cite this work as:
-
-@article{fard2022facial,
-  title={Facial landmark points detection using knowledge distillation-based neural networks},
-  author={Fard, Ali Pourramezan and Mahoor, Mohammad H},
-  journal={Computer Vision and Image Understanding},
-  volume={215},
-  pages={103316},
-  year={2022},
-  publisher={Elsevier}
-}
-        </code>
-    </pre>
-
-    <div class="content">
         <h2>Introduction</h2>
 
         <p>Facial landmark detection is a vital step for numerous facial image analysis applications. Although some deep learning-based methods have achieved good performances in this task, they are often not suitable for running on mobile devices. Such methods rely on networks with many parameters, which makes the training and inference time-consuming. Training lightweight neural networks such as MobileNets are often challenging, and the models might have low accuracy. Inspired by knowledge distillation (KD), this paper presents a novel loss function to train a lightweight Student network (e.g., MobileNetV2) for facial landmark detection. We use two Teacher networks, a Tolerant-Teacher and a Tough-Teacher in conjunction with the Student network. The Tolerant-Teacher is trained using Soft-landmarks created by active shape models, while the Tough-Teacher is trained using the ground truth (aka Hard-landmarks) landmark points. To utilize the facial landmark points predicted by the Teacher networks, we define an Assistive Loss (ALoss) for each Teacher network. Moreover, we define a loss function called KD-Loss that utilizes the facial landmark points predicted by the two pre-trained Teacher networks (EfficientNet-b3) to guide the lightweight Student network towards predicting the Hard-landmarks. Our experimental results on three challenging facial datasets show that the proposed architecture will result in a better-trained Student network that can extract facial landmark points with high accuracy.</p>
-    </div>
+
+
+</div>
+
+<div id="main-content">
 
     <h2>Architecture</h2>
 
@@ -172,6 +143,11 @@ Please cite this work as:
     <p>Proposed KD-based architecture for training the Student network. KDLoss uses the knowledge of the previously trained Teacher networks by utilizing the assistive loss functions ALossT ou and ALossT ol, to improve the performance the face alignment task:</p>
 
     <img src="https://github.com/aliprf/KD-Loss/blob/master/samples/general_framework-1.jpg?raw=true" alt="general_framework">
+
+
+</div>
+
+<div id="main-content">
 
     <h2>Evaluation</h2>
 
@@ -186,7 +162,11 @@ Please cite this work as:
     <h3>WFLW:</h3>
     <img src="https://github.com/aliprf/KD-Loss/blob/master/samples/KD_WFLW_samples-1.jpg?raw=true" alt="KD_WFLW_samples">
 
-    <hr>
+
+</div>
+
+
+<div id="main-content">
 
     <h2>Installing the requirements</h2>
 
@@ -197,6 +177,11 @@ Please cite this work as:
 pip install -r requirements.txt
         </code>
     </pre>
+
+
+</div>
+
+<div id="main-content">
 
     <h2>Using the pre-trained models</h2>
 
@@ -218,6 +203,11 @@ image = np.expand_dims(img, axis=0)
 pose_predicted = model.predict(image)[1][0]
         </code>
     </pre>
+
+
+</div>
+
+<div id="main-content">
 
     <h2>Training Network from scratch</h2>
 
@@ -253,6 +243,25 @@ st_trainer.train(arch_student='mobileNetV2', weight_path_student=None,
         </code>
     </pre>
 
+</div>
+
+ <div id="main-content">
+    <p><a href="https://github.com/aliprf/KD-Loss"><img src="https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/facial-landmark-points-detection-using/face-alignment-on-cofw" alt="GitHub"></a></p>
+
+    <ul>
+        <li><strong>Link to the paper:</strong></li>
+        <ul>
+            <li><a href="https://scholar.google.com/citations?view_op=view_citation&hl=en&user=96lS6HIAAAAJ&citation_for_view=96lS6HIAAAAJ:zYLM7Y9cAGgC">Google Scholar</a></li>
+            <li><a href="https://www.sciencedirect.com/science/article/pii/S1077314221001582">Elsevier</a></li>
+            <li><a href="https://arxiv.org/abs/2111.07047">Arxiv</a></li>
+        </ul>
+        <li><strong>Link to the paperswithcode.com:</strong> <a href="https://paperswithcode.com/paper/facial-landmark-points-detection-using">https://paperswithcode.com/paper/facial-landmark-points-detection-using</a></li>
+    </ul>
+
+</div>
+
+<div id="main-content">
+    <h2>Referencee</h2>
     <pre>
         <code>
 Please cite this work as:
@@ -268,19 +277,12 @@ Please cite this work as:
 }
         </code>
     </pre>
+</div>
 
-    <pre>
-        <code>
-@@plaese STAR the repo if you like it.@@
-        </code>
-    </pre>
 
-    <script>
-        function toggleDarkMode() {
-            const body = document.body;
-            body.classList.toggle("dark-mode");
-        }
-    </script>
+
+</div>
+
 
 </body>
 
